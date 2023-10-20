@@ -1,7 +1,7 @@
 import requests
 import json
 # import related models here
-from .models import CarDealer
+from .models import CarDealer, DealerReview
 from requests.auth import HTTPBasicAuth
 
 
@@ -63,12 +63,48 @@ def get_dealers_from_cf(url, **kwargs):
 # def get_dealer_by_id_from_cf(url, dealerId):
 # - Call get_request() with specified arguments
 # - Parse JSON results into a DealerView object list
+def get_dealer_reviews_from_cf(url, dealerId):
+    results = []
+    json_result = get_request(url,dealerId=dealerId)
+    if json_result:
+        #reviews = json_result["entries"]
+        for review_doc in json_result:
+            review_obj = DealerReview(
+                dealership=review_doc.get("dealership"),
+                name=review_doc.get("name"),
+                purchase=review_doc.get("purchase"),
+                review=review_doc.get("review"),
+                purchase_date=review_doc.get("purchase_date"),
+                car_make=review_doc.get("car_make"),
+                car_model=review_doc.get("car_model"),
+                car_year=review_doc.get("car_year"),
+                sentiment=analyze_review_sentiments(review_doc.get("review")),
+                id=review_doc.get("id")
+            )
+            results.append(review_obj)
+
+    return results
 
 
 # Create an `analyze_review_sentiments` method to call Watson NLU and analyze text
 # def analyze_review_sentiments(text):
 # - Call get_request() with specified arguments
 # - Get the returned sentiment label such as Positive or Negative
+def analyze_review_sentiments(text):
+    url = "https://api.us-south.natural-language-understanding.watson.cloud.ibm.com/instances/cf446246-ced9-41d9-bb27-cbc48acef10d"
+    api_key = "xT7QVlX3R04eQKLVPSHiFcQQSpCD8PLmiUQkKpzW7k0A"
+    params = {
+        "text": text,
+        "features": {
+            "sentiment": {
+            }
+        },
+        "language": "en"
+    }
+    # params["return_analyzed_text"] = kwargs["return_analyzed_text"]
+    response = requests.post(url, json=params, headers={'Content-Type': 'application/json'},
+                                    auth=('apikey', api_key))
+    return response.json()["sentiment"]["document"]["label"]
 
 
 

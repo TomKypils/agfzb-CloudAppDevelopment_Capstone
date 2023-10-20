@@ -8,7 +8,7 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
 from datetime import datetime
 from .models import CarModel
-from .restapis import get_dealers_from_cf
+from .restapis import get_dealers_from_cf, get_dealer_reviews_from_cf
 import logging
 import json
 
@@ -93,9 +93,28 @@ def get_dealerships(request):
 
 # Create a `get_dealer_details` view to render the reviews of a dealer
 # def get_dealer_details(request, dealer_id):
-# ...
+def get_dealer_details(request, dealer_id):
+    context = {}
+    dealer = {}
+    if request.method == "GET":
+        url = "https://us-south.functions.appdomain.cloud/api/v1/web/bb5729a9-e376-4586-b083-2cc51fbdcb7f/default/get-review"
+        dealer['dealerId'] = dealer_id
+        reviews = get_dealer_reviews_from_cf(url,dealer)
+        # Concat all dealer's short name
+        # dealer_names = ' '.join([dealer.short_name for dealer in dealerships])
+        # Return a list of dealer short name
+        # return HttpResponse(dealer_names)
+        #context['reviews'] = filter(lambda x: x.dealership == dealer_id, reviews)
+        context['reviews'] = reviews
+        context['dealer_id'] = dealer_id
+        context['dealer'] = get_dealer_detail_infos(dealer_id)
+    return render(request, 'djangoapp/dealer_details.html', context)
 
 # Create a `add_review` view to submit a review
 # def add_review(request, dealer_id):
 # ...
 
+def get_dealer_detail_infos(dealer_id):
+    url = "https://us-south.functions.appdomain.cloud/api/v1/web/bb5729a9-e376-4586-b083-2cc51fbdcb7f/default/get-dealership"
+    dealerships = get_dealers_from_cf(url)
+    return next(filter(lambda x: x.id == dealer_id, dealerships))
