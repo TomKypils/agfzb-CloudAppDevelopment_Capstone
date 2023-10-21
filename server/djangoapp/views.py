@@ -8,7 +8,7 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
 from datetime import datetime
 from .models import CarModel
-from .restapis import get_dealers_from_cf, get_dealer_reviews_from_cf
+from .restapis import get_dealers_from_cf, get_dealer_reviews_from_cf, post_review
 import logging
 import json
 
@@ -109,7 +109,28 @@ def get_dealer_details(request, dealer_id):
 
 # Create a `add_review` view to submit a review
 # def add_review(request, dealer_id):
-# ...
+def add_review(request, dealer_id):
+    if request.method == "GET":
+        context = {}
+        context['dealer_id'] = dealer_id
+        context['dealer'] = get_dealer_detail_infos(dealer_id)
+        context['cars'] = CarModel.objects.all()
+        return render(request, 'djangoapp/add_review.html', context)
+    if request.method == "POST":
+        url = "https://5bde1960.us-south.apigw.appdomain.cloud/api/review-post"
+        payload = {}
+        payload['name'] = request.POST['username']
+        payload['dealership'] = dealer_id
+        payload['review'] = request.POST['review']
+        payload['purchase'] = request.POST['purchase']
+        payload['purchase_date'] = request.POST['purchase_date']
+        car = CarModel.objects.get(id = request.POST['car'])
+        if car:
+            payload['car_make'] = car.make.name
+            payload['car_model'] = car.name
+            payload['car_year'] = car.year.strftime("%Y")
+        post_review(url, payload)
+    return redirect('djangoapp:dealer_details', dealer_id = dealer_id)
 
 def get_dealer_detail_infos(dealer_id):
     url = "https://us-south.functions.appdomain.cloud/api/v1/web/bb5729a9-e376-4586-b083-2cc51fbdcb7f/default/get-dealership"

@@ -26,6 +26,24 @@ def get_request(url, **kwargs):
 
 # Create a `post_request` to make HTTP POST requests
 # e.g., response = requests.post(url, params=kwargs, json=payload)
+def post_request(url, **kwargs):
+    print(kwargs)
+    print("POST to {} ".format(url))
+    try:
+        # Call post method of requests library with URL and parameters
+        payload = kwargs.pop("payload")
+        response = requests.post(url, headers={'Content-Type': 'application/json'},
+                                            params=kwargs, json=payload)
+    except:
+        # If any error occurs
+        print("Network exception occurred")
+    status_code = response.status_code
+    print("With status {} ".format(status_code))
+    json_data = json.loads(response.text)
+    return json_data
+
+def post_review(url, payload):
+    post_request(url, payload=payload)
 
 
 # Create a get_dealers_from_cf method to get dealers from a cloud function
@@ -91,7 +109,7 @@ def get_dealer_reviews_from_cf(url, **kwargs):
 # - Call get_request() with specified arguments
 # - Get the returned sentiment label such as Positive or Negative
 def analyze_review_sentiments(text):
-    url = "https://api.us-south.natural-language-understanding.watson.cloud.ibm.com/instances/8fb58c93-101d-4da9-91f9-e0995e12b8ca"
+    url = "https://api.us-south.natural-language-understanding.watson.cloud.ibm.com/instances/8fb58c93-101d-4da9-91f9-e0995e12b8ca/v1/analyze?version=2022-04-07"
     api_key = "8UQ-1z_MyFq5e8UT_JRFCje-TfoPot_K6zMQ09WnMQgj"
     params = {
         "text": text,
