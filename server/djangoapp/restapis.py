@@ -63,9 +63,9 @@ def get_dealers_from_cf(url, **kwargs):
 # def get_dealer_by_id_from_cf(url, dealerId):
 # - Call get_request() with specified arguments
 # - Parse JSON results into a DealerView object list
-def get_dealer_reviews_from_cf(url, dealerId):
+def get_dealer_reviews_from_cf(url, **kwargs):
     results = []
-    json_result = get_request(url,dealerId=dealerId)
+    json_result = get_request(url)
     if json_result:
         #reviews = json_result["entries"]
         for review_doc in json_result:
@@ -91,8 +91,8 @@ def get_dealer_reviews_from_cf(url, dealerId):
 # - Call get_request() with specified arguments
 # - Get the returned sentiment label such as Positive or Negative
 def analyze_review_sentiments(text):
-    url = "https://api.us-south.natural-language-understanding.watson.cloud.ibm.com/instances/cf446246-ced9-41d9-bb27-cbc48acef10d"
-    api_key = "xT7QVlX3R04eQKLVPSHiFcQQSpCD8PLmiUQkKpzW7k0A"
+    url = "https://api.us-south.natural-language-understanding.watson.cloud.ibm.com/instances/8fb58c93-101d-4da9-91f9-e0995e12b8ca"
+    api_key = "8UQ-1z_MyFq5e8UT_JRFCje-TfoPot_K6zMQ09WnMQgj"
     params = {
         "text": text,
         "features": {
@@ -101,10 +101,20 @@ def analyze_review_sentiments(text):
         },
         "language": "en"
     }
-    # params["return_analyzed_text"] = kwargs["return_analyzed_text"]
+    
     response = requests.post(url, json=params, headers={'Content-Type': 'application/json'},
                                     auth=('apikey', api_key))
-    return response.json()["sentiment"]["document"]["label"]
+
+    if response.status_code == 200:
+        # Parse the JSON response content
+        data = response.json()
+        
+        # Access the sentiment label from the parsed data
+        sentiment_label = data["sentiment"]["document"]["label"]
+        return sentiment_label
+    else:
+        # Handle the case when the request was not successful
+        return "Error: Request failed with status code " + str(response.status_code)
 
 
 
